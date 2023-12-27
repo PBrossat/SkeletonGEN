@@ -1,7 +1,7 @@
 {
   "name": "skeletongen",
   "displayName": "SkeletonGEN",
-  "description": "SkeletonGEN is a lightweight Visual Studio Code extension designed to streamline C++ development. With a focus on simplicity, this extension automatically generates method skeletons in your .cpp files based on the method signatures present in your corresponding .h files. If the .cpp file doesn't exist, CPPSklt creates it for you, providing a hassle-free way to have a ready-to-use .cpp file without manual copying and pasting.",
+  "description": "SkeletonGEN is a lightweight Visual Studio Code extension designed to streamline C++ development. With a focus on simplicity, this extension automatically generates method skeletons in your .cpp files based on the method signatures present in your corresponding .h files. If the .cpp file doesn't exist, SkeletonGEN creates it for you, providing a hassle-free way to have a ready-to-use .cpp file without manual copying and pasting.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.85.0"
