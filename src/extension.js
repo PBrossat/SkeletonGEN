@@ -4,10 +4,8 @@ const { TextEncoder } = require("util");
 
 // Import all the functions
 const { createSkeleton } = require("./skeleton");
-const {
-  getAllMethodsWithSignature,
-  getClassName,
-} = require("./Methods");
+const { getAllMethodsWithSignature, getClassName } = require("./Methods");
+const { getAllConstructorWithParameters } = require("./constructor");
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -35,9 +33,6 @@ function activate(context) {
         return;
       }
 
-      // Display a message box to the user
-      vscode.window.showInformationMessage("Your .cpp file is ready !");
-
       const pathNewFile = editor.document.fileName.replace(/\.[^/.]+$/, ""); // To be sure that the new file will be created in the same folder
 
       // Get the name of the file without extension
@@ -63,8 +58,12 @@ function activate(context) {
         fileDefinition,
         nameFile,
         getClassName(fileHeader),
-        getAllMethodsWithSignature(fileHeader)
+        getAllMethodsWithSignature(fileHeader), // Get all the methods of the class
+        getAllConstructorWithParameters(fileHeader, getClassName(fileHeader)) // Get all the constructors with parameters of the class
       );
+
+      // Display a message box to the user
+      vscode.window.showInformationMessage("Your .cpp file is ready !");
 
       // Write the skeleton in the new file
       workspace.fs.writeFile(cppFile, new TextEncoder().encode(cppFileContent));
