@@ -37,7 +37,7 @@ function getAllMethodsWithSignature(file) {
 }
 
 /**
- * Extracts the method implementation from the C++ file (.cpp) if it already exists.
+ * Extracts the method implementation from the C++ file (.cpp) if it already exists else, creates a skeleton.
  *
  * @param {vscode.TextDocument} file - The TextDocument representing the C++ file.
  * @param {{ returnType: string, methodName: string, parameters: string }} method - An object representing a method signature, containing returnType, methodName, and parameters.
@@ -47,21 +47,18 @@ function getAllMethodsWithSignature(file) {
 function createMethodSkeleton(file, method, className) {
   let methodSkeleton = "";
 
-  console.log(method);
-  console.log(className);
-  console.log(
-    `${method.returnType}\\s+${className}::${method.methodName}\\s*${method.parameters}\\s*{[^}]*})`
-  );
+  const parameters = method.parameters.replace(/([()])/g, "\\$1"); // Escape the parentheses
 
+  // Create a regex to find the method implementation
   const methodRegex = new RegExp(
-    `(${method.returnType}\\s+${className}::${method.methodName}\\s*${method.parameters}\\s*{[^}]*})`
+    `(${method.returnType}\\s*${className}::${method.methodName}\\s*${parameters}\\s*{[^}]*})`
   );
 
   const methodAlreadyImplemented = file.getText().match(methodRegex);
 
   // If the method is already implemented, we keep the implementation and append it to the skeleton
   if (methodAlreadyImplemented) {
-    methodSkeleton = `${methodAlreadyImplemented[0]}\n\n`;
+    methodSkeleton = `${methodAlreadyImplemented[1]}\n\n`;
   }
   // If the method is not implemented, we create a skeleton
   else {
