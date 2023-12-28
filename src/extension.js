@@ -7,7 +7,6 @@ const { createSkeleton } = require("./skeleton");
 const {
   getAllMethodsWithSignature,
   getClassName,
-  createMethodSkeleton,
 } = require("./Methods");
 
 /**
