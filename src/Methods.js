@@ -1,6 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 const vscode = require("vscode");
 
+//TODO : Si dans un commentaire, ne pas prendre en compte
+
 /**
  * Extracts and parses method signatures from a C++ file (.h).
  *
