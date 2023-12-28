@@ -2,7 +2,10 @@
 const vscode = require("vscode");
 
 // Import
-const { createConstructor } = require("./constructor");
+const {
+  createDefaultConstructor,
+  createConstructorWithParametersSkeleton,
+} = require("./constructor");
 const { createDestructor } = require("./destructor");
 const { createMethodSkeleton } = require("./Methods");
 
@@ -20,17 +23,27 @@ function createSkeleton(
   fileDefinition,
   nameFile,
   className,
-  methods
+  methods,
+  constructorsWithParameters
 ) {
   let skeleton = "";
 
   skeleton += `#include "${nameFile}.h"\n#include <iostream>\nusing namespace std;\n\n`;
 
   // Create the constructor
-  skeleton += createConstructor(fileHeader, fileDefinition, className);
+  skeleton += createDefaultConstructor(fileHeader, fileDefinition, className);
 
   //Create the destructor
   skeleton += createDestructor(fileHeader, fileDefinition, className);
+
+  // Create the constructor with parameters
+  for (let i = 0; i < constructorsWithParameters.length; i++) {
+    skeleton += createConstructorWithParametersSkeleton(
+      fileDefinition,
+      constructorsWithParameters[i],
+      className
+    );
+  }
 
   // Create all the methods
   for (let i = 0; i < methods.length; i++) {
