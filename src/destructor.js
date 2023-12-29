@@ -52,14 +52,16 @@ function haveDestructor(file, typeFile, className) {
   // if it's a .h file
   if (typeFile === 0) {
     destructorMatch = fileContent.match(
-      new RegExp(`(${className})\\s*\\(\\s*\\)`)
-    ); // [className] ()
+      new RegExp(`(?<!\\/\\/[^\\n]*\\b)\\b${className}\\s*\\(\\s*\\)`)
+    ); // [className] ()  (exclude the destructor in a comment)
   }
   // if it's a .cpp file
   else if (typeFile === 1) {
     destructorMatch = fileContent.match(
-      new RegExp(`(${className})\\s*::~\\s*(${className})\\s*\\(\\s*\\)`)
-    ); // [className]::~[className]()
+      new RegExp(
+        `(?<!(\\/\\/[^\\n]*\\b|\\/\\*[\\s\\S]*?\\*\\/))\\b${className}\\s*::~\\s*${className}\\s*\\(\\s*\\)`
+      )
+    ); // [className]::~[className]() (exclude the destructor in a comment or in a block comment)
   }
 
   return destructorMatch !== null;
