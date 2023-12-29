@@ -1,5 +1,44 @@
 // eslint-disable-next-line no-unused-vars
 const vscode = require("vscode");
+const { isComment } = require("./utils/commentUtils");
+
+
+/**
+ * Check if the default constructor exist in the file (.h or .cpp depending on the typeFile)
+ * Also check that the constructor is not in a comment or in a block comment in both files
+ *
+ * @param {vscode.TextDocument} file
+ * @param {number} typeFile : 0 = header, 1 = definition
+ * @returns {boolean} - True if the default constructor is found, false otherwise.
+ */
+function haveDefaultConstructor(file, typeFile, className) {
+  
+  // Get the number of lines in the file
+  const lineCount = file.lineCount;
+
+  // Browse the file line by line
+  for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+    const lineText = file.lineAt(lineIndex).text;
+
+    // Ignore comments line (c++ or c style)
+    if (isComment(lineText)) {
+      continue;
+    }
+
+    // If it's a .h file and the constructor is found ([className]())
+    if (typeFile===0 && lineText.match(new RegExp(`[^~]\\b${className}\\s*\\(\\s*\\)`))) {
+      return true;
+    }
+    // If it's a .cpp file and the constructor is already implemented ([className]::[className]())
+    else if (typeFile===1 && lineText.match(new RegExp(`\\b${className}\\s*::\\s*[^~]\\s*${className}\\s*\\(\\s*\\)`))) {
+      return true;
+    }
+  }
+
+  // If the constructor is not found in both files
+  return false;
+}
+
 
 /**
  * Create the default constructor of the class if it exist in the header file and doesn't already implement in the definition file
@@ -110,32 +149,6 @@ function getAllConstructorWithParameters(file, className) {
   return result;
 }
 
-/**
- * Check if the default constructor exist in the file (.h or .cpp depending on the typeFile)
- *
- * @param {vscode.TextDocument} file
- * @param int typeFile : 0 = header, 1 = definition
- * @returns boolean
- */
-function haveDefaultConstructor(file, typeFile, className) {
-  const fileContent = file.getText();
-  let constructorMatch = null;
-
-  // if it's a .h file
-  if (typeFile === 0) {
-    constructorMatch = fileContent.match(
-      new RegExp(`\\b${className}\\s*\\(\\s*\\)`)
-    ); // [className] ()
-  }
-  // if it's a .cpp file
-  else if (typeFile === 1) {
-    constructorMatch = fileContent.match(
-      new RegExp(`(${className})\\s*::\\s*(${className})\\s*\\(\\s*\\)`)
-    ); // [className]::[className]()
-  }
-
-  return constructorMatch !== null;
-}
 
 module.exports = {
   createDefaultConstructor,
