@@ -1,17 +1,18 @@
 // eslint-disable-next-line no-unused-vars
 const vscode = require("vscode");
-const { isComment } = require("./utils/commentUtils");
+const { isComment} = require("./utils/commentUtil");
+const { containsTildeFollowedByClassName } = require("./utils/destructorUtil");
+const {containsClassNameFOllowedByParenthesis} = require("./utils/constructorUtil");
 
 
 /**
  * Check if the default constructor exist in the file (.h or .cpp depending on the typeFile)
  * Also check that the constructor is not in a comment or in a block comment in both files
  *
- * @param {vscode.TextDocument} file
- * @param {number} typeFile : 0 = header, 1 = definition
+ * @param {vscode.TextDocument} file - The TextDocument representing the file (.h or .cpp).
  * @returns {boolean} - True if the default constructor is found, false otherwise.
  */
-function haveDefaultConstructor(file, typeFile, className) {
+function haveDefaultConstructor(file, className) {
   
   // Get the number of lines in the file
   const lineCount = file.lineCount;
@@ -20,17 +21,13 @@ function haveDefaultConstructor(file, typeFile, className) {
   for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
     const lineText = file.lineAt(lineIndex).text;
 
-    // Ignore comments line (c++ or c style)
-    if (isComment(lineText)) {
+    // Ignore comments line (c++ or c style) or destructor
+    if (isComment(lineText) || containsTildeFollowedByClassName(lineText, className)) {
       continue;
     }
 
-    // If it's a .h file and the constructor is found ([className]())
-    if (typeFile===0 && lineText.match(new RegExp(`[^~]\\b${className}\\s*\\(\\s*\\)`))) {
-      return true;
-    }
-    // If it's a .cpp file and the constructor is already implemented ([className]::[className]())
-    else if (typeFile===1 && lineText.match(new RegExp(`\\b${className}\\s*::\\s*[^~]\\s*${className}\\s*\\(\\s*\\)`))) {
+    // If the file contain [className][spaces]() (and so [className]::[className][spaces]() works too)  
+    if (containsClassNameFOllowedByParenthesis(lineText, className)) {
       return true;
     }
   }
@@ -54,13 +51,13 @@ function createDefaultConstructor(fileHeader, fileDefinition, className) {
 
   // If the constructor exist in the header file or doesn't already implement in the definition file
   if (
-    haveDefaultConstructor(fileHeader, 0, className) &&
-    !haveDefaultConstructor(fileDefinition, 1, className)
+    haveDefaultConstructor(fileHeader, className) &&
+    !haveDefaultConstructor(fileDefinition, className)
   ) {
-    constructor += `${className}::${className}()\n{\n\t// TODO : implement the constructor\n}\n\n`;
+    constructor += `${className}::${className}()\n{\n\t// TODO : implement the default constructor\n}\n\n`;
   }
   // If the constructor is already implement in the definition file
-  else if (haveDefaultConstructor(fileDefinition, 1, className)) {
+  else if (haveDefaultConstructor(fileDefinition, className)) {
     // Extract the existing constructor block from the .cpp file
     const constructorRegex = new RegExp(
       `(${className}::${className}\\s*\\([^\\)]*\\)\\s*{[^}]*})`
@@ -114,40 +111,53 @@ function createConstructorWithParametersSkeleton(file, constructor, className) {
 }
 
 /**
- * Get all the constructor with parameters of the class
+ * Get all the constructor with parameters of the class 
  *
  * @param {vscode.TextDocument} file - The TextDocument representing the header file (.h).
  * @param {string} className - The name of the main class.
  * @returns {Array<{ constructorParameters: string }>} - An array of objects representing constructor with parameters, each containing parameters of the constructor.
  */
 function getAllConstructorWithParameters(file, className) {
-  const fileContent = file.getText();
-
-  const constructorRegex = new RegExp(
-    `\\b(?:inline\\s+)?${className}\\s*\\([^)]+\\)`,
-    "g"
-  ); // [inline] [className] ([parameters]) (inline is optional)
-
-  const constructorMatches = fileContent.match(constructorRegex);
+  
+  const lineCount = file.lineCount;
 
   const result = [];
 
-  // Create a template array with : parameters of the constructor (if exist)
-  for (let i = 0; i < constructorMatches.length; i++) {
-    // If the method is inline, skip it
-    if (/\binline\b/.test(constructorMatches[i])) {
+  // Browse the file line by line
+  for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+    const lineText = file.lineAt(lineIndex).text;
+
+    // Ignore comments line (c++ or c style) or destructor
+    if (isComment(lineText) || containsTildeFollowedByClassName(lineText, className) ) {
       continue;
     }
 
-    const constructorParameters = constructorMatches[i].match(/\([^\)]*\)/)[0]; // get the parameters (if exist)
+    // If the constructor is found ([className]([parameters]))
+    const constructorRegex = new RegExp(
+      `\\b(?:inline\\s+)?${className}\\s*\\([^)]+\\)`,
+      "g"
+    );
+    const matchResult = lineText.match(constructorRegex);
 
-    result.push({
-      constructorParameters,
-    });
+    if (matchResult) {
+      // If it's inline, skip it
+      if (/\binline\b/.test(lineText)) {
+        continue;
+      }
+
+      // Get the parameters (if exist)
+      const constructorParameters = lineText.match(/\([^\)]*\)/)[0]; // get the parameters (if exist)
+
+      result.push({
+        constructorParameters,
+      });
+    }
   }
 
   return result;
 }
+
+
 
 
 module.exports = {
