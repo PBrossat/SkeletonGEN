@@ -6,8 +6,8 @@
  */
 function isComment(lineText) {
     return lineText.trim().startsWith('//') || lineText.trim().startsWith('/*') || lineText.trim().startsWith('*');
-  }
-  
+}
+
 module.exports = {
     isComment,
 };
