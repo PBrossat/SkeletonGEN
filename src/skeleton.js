@@ -28,6 +28,7 @@ function createSkeleton(
 ) {
   let skeleton = "";
 
+  // Create the header of the file (.cpp)
   skeleton += `#include "${nameFile}.h"\n#include <iostream>\nusing namespace std;\n\n`;
 
   // Create the constructor
@@ -35,6 +36,7 @@ function createSkeleton(
 
   //Create the destructor
   skeleton += createDestructor(fileHeader, fileDefinition, className);
+
 
   // Create the constructor with parameters
   for (let i = 0; i < constructorsWithParameters.length; i++) {
