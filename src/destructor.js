@@ -1,5 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 const vscode = require("vscode");
+const { isComment } = require("./utils/commentUtil");
+const { containsTildeFollowedByClassName } = require("./utils/destructorUtil");
 
 /**
  * Create the destructor of the class if it exist in the header file and doesn't already implement in the definition file
@@ -15,13 +17,13 @@ function createDestructor(fileHeader, fileDefinition, className) {
 
   // If the destructor exist in the header file and doesn't already implement in the definition file
   if (
-    haveDestructor(fileHeader, 0, className) &&
-    !haveDestructor(fileDefinition, 1, className)
+    haveDestructor(fileHeader, className) &&
+    !haveDestructor(fileDefinition, className)
   ) {
     destructor += `${className}::~${className}()\n{\n\t// TODO : implement the destructor\n}\n\n`;
   }
   // If the destructor is already implement in the definition file
-  else if (haveDestructor(fileDefinition, 1, className)) {
+  else if (haveDestructor(fileDefinition, className)) {
     // Extract the existing destructor block from the .cpp file
     const destructorRegex = new RegExp(
       `(${className}::~${className}\\s*\\([^\\)]*\\)\\s*{[^}]*})`
@@ -42,29 +44,27 @@ function createDestructor(fileHeader, fileDefinition, className) {
  * @description Check if the destructor exist in the file (.h or .cpp depending on the typeFile)
  *
  * @param {vscode.TextDocument} file
- * @param {number} typeFile 0 = header, 1 = definition
  * @returns {boolean}
  */
-function haveDestructor(file, typeFile, className) {
-  const fileContent = file.getText();
-  let destructorMatch = null;
+function haveDestructor(file, className) {
+  // Get the number of lines in the file
+  const lineCount = file.lineCount;
 
-  // if it's a .h file
-  if (typeFile === 0) {
-    destructorMatch = fileContent.match(
-      new RegExp(`(?<!\\/\\/[^\\n]*\\b)\\b${className}\\s*\\(\\s*\\)`)
-    ); // [className] ()  (exclude the destructor in a comment)
-  }
-  // if it's a .cpp file
-  else if (typeFile === 1) {
-    destructorMatch = fileContent.match(
-      new RegExp(
-        `(?<!(\\/\\/[^\\n]*\\b|\\/\\*[\\s\\S]*?\\*\\/))\\b${className}\\s*::~\\s*${className}\\s*\\(\\s*\\)`
-      )
-    ); // [className]::~[className]() (exclude the destructor in a comment or in a block comment)
-  }
+  // Browse the file line by line
+  for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+    const lineText = file.lineAt(lineIndex).text;
 
-  return destructorMatch !== null;
+    // Ignore comments line (c++ or c style)
+    if(isComment(lineText)){
+      continue;
+    }
+
+    // If the file contain ~[className]() (and so [className]::~[className]() works too)
+    if (containsTildeFollowedByClassName(lineText, className)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 module.exports = {
