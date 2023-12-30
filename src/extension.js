@@ -4,8 +4,9 @@ const { TextEncoder } = require("util");
 
 // Import all the functions
 const { createSkeleton } = require("./skeleton");
-const { getAllMethodsWithSignature, getClassName } = require("./Methods");
+const { getAllMethodsWithSignature } = require("./Methods");
 const { getAllConstructorWithParameters } = require("./constructor");
+const { getClassName } = require("./utils/classUtil");
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -41,6 +42,28 @@ function activate(context) {
       // Create a new file .cpp with the same name and the correct extension (.cpp)
       const cppFile = vscode.Uri.file(`${pathNewFile}.cpp`);
 
+      // Check if the .cpp file already exists
+      let cppFileExists = false;
+      try {
+        await workspace.fs.readFile(cppFile);
+        cppFileExists = true;
+      } catch (error) {
+        // If an error occurs, the file doesn't exist
+        cppFileExists = false;
+      }
+
+      // If the .cpp file doesn't exist, create it
+      if (!cppFileExists) {
+        try {
+          await workspace.fs.writeFile(cppFile, new Uint8Array());
+          vscode.window.showInformationMessage("The .cpp file has been created");
+        } catch (error) {
+          vscode.window.showErrorMessage("Error creating .cpp file:", error.message);
+          return;
+        }
+      }
+
+
       const fileHeader = editor.document; // the Header file (.h)
 
       let fileDefinition;
@@ -48,7 +71,7 @@ function activate(context) {
         fileDefinition = await vscode.workspace.openTextDocument(cppFile);
       } catch (error) {
         // Handle errors, e.g., the file doesn't exist yet
-        console.error(error.message);
+        vscode.window.showErrorMessage("Error opening .cpp file :", error.message);
         return;
       }
 
@@ -62,11 +85,18 @@ function activate(context) {
         getAllConstructorWithParameters(fileHeader, getClassName(fileHeader)) // Get all the constructors with parameters of the class
       );
 
-      // Display a message box to the user
-      vscode.window.showInformationMessage("Your .cpp file is ready !");
-
+      
       // Write the skeleton in the new file
-      workspace.fs.writeFile(cppFile, new TextEncoder().encode(cppFileContent));
+      try {
+        await workspace.fs.writeFile(cppFile, new TextEncoder().encode(cppFileContent));
+      }
+      catch (error) {
+        vscode.window.showErrorMessage("Error writing in .cpp file :", error.message);
+        return;
+      }
+
+      // Display a succes message box to the user
+      vscode.window.showInformationMessage("Your .cpp file is ready !");
     }
   );
 
