@@ -15,7 +15,7 @@ const { createMethodSkeleton } = require("./Methods");
  * @param {vscode.TextDocument} fileDefinition - The TextDocument representing the definition file (.cpp).
  * @param {string} nameFile - The name of the file class.
  * @param {string} className - The name of the main class.
- * @param {Array<{ returnType: string, methodName: string, parameters: string }>} methods - The methods of the class (without constructor and destructor)
+ * @param {Array<{ returnType: string, methodName: string, parameters: string, methodInComment: boolean}>} methods - The methods of the class (without constructor and destructor)
  * @returns {string} - The generated skeleton.
  */
 function createSkeleton(

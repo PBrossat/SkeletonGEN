@@ -8,6 +8,13 @@ const { getAllMethodsWithSignature } = require("./Methods");
 const { getAllConstructorWithParameters } = require("./constructor");
 const { getClassName } = require("./utils/classUtil");
 
+
+
+
+// TODO : Add icon to the extension
+// TODO : Jest test for the extension (all the functions)
+// TODO : When change signature of a method, change the signature in the .cpp file (if the method already exists)
+
 /**
  * @param {vscode.ExtensionContext} context
  */

@@ -1,8 +1,8 @@
 // eslint-disable-next-line no-unused-vars
 const vscode = require("vscode");
-const { isComment} = require("./utils/commentUtil");
+const { isCommentLine, updateFlagIsBlockComment} = require("./utils/commentUtil");
 const { containsTildeFollowedByClassName } = require("./utils/destructorUtil");
-const {containsClassNameFOllowedByParenthesis} = require("./utils/constructorUtil");
+const { containsClassNameFOllowedByParenthesis } = require("./utils/constructorUtil");
 
 
 /**
@@ -17,12 +17,17 @@ function haveDefaultConstructor(file, className) {
   // Get the number of lines in the file
   const lineCount = file.lineCount;
 
+  let isBlockComment = false;
+
   // Browse the file line by line
   for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
     const lineText = file.lineAt(lineIndex).text;
 
-    // Ignore comments line (c++ or c style) or destructor
-    if (isComment(lineText) || containsTildeFollowedByClassName(lineText, className)) {
+    // Update the flag isBlockComment if the line contains /* or */
+    isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
+
+    // Ignore comments line (c++ or c style), comment block or destructor
+    if (isCommentLine(lineText) || containsTildeFollowedByClassName(lineText, className) || isBlockComment) {
       continue;
     }
 
@@ -78,7 +83,7 @@ function createDefaultConstructor(fileHeader, fileDefinition, className) {
  *  Extract the constructor with parameters implementation from the C++ file (.cpp) if it already exists else, creates a skeleton.
  *
  * @param {vscode.TextDocument} file - The TextDocument representing the definition file (.cpp).
- * @param {{constructorParameters: string}} constructor - An object representing a constructor with parameters, containing constructorParameters.
+ * @param {{constructorParameters: string, constructorInComment : boolean}} constructor - An object representing a constructor with parameters, containing constructorParameters.
  * @param {string} className - The name of the main class.
  * @returns {string} - The generated constructor with parameters.
  */
@@ -100,8 +105,8 @@ function createConstructorWithParametersSkeleton(file, constructor, className) {
   if (constructorWithParametersAlreadyImplemented) {
     constructorWithParametersSkeleton = `${constructorWithParametersAlreadyImplemented[1]}\n\n`;
   }
-  // If the method is not implemented, we create a skeleton
-  else {
+  // If the method is not implemented and not in a comment, we create a skeleton
+  else if (!constructor.constructorInComment && !constructorWithParametersAlreadyImplemented){
     constructorWithParametersSkeleton += `${className}::${className}${constructor.constructorParameters}\n`;
     constructorWithParametersSkeleton += `{\n\t// TODO : implement the constructor with parameters\n} `;
     constructorWithParametersSkeleton += `\n\n`;
@@ -123,12 +128,17 @@ function getAllConstructorWithParameters(file, className) {
 
   const result = [];
 
+  let isBlockComment = false;
+
   // Browse the file line by line
   for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
     const lineText = file.lineAt(lineIndex).text;
 
-    // Ignore comments line (c++ or c style) or destructor
-    if (isComment(lineText) || containsTildeFollowedByClassName(lineText, className) ) {
+    // Update the flag isBlockComment if the line contains /* or */
+    isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
+
+    // Ignore destructor
+    if (containsTildeFollowedByClassName(lineText, className)){
       continue;
     }
 
@@ -147,9 +157,11 @@ function getAllConstructorWithParameters(file, className) {
 
       // Get the parameters (if exist)
       const constructorParameters = lineText.match(/\([^\)]*\)/)[0]; // get the parameters (if exist)
+      const constructorInComment = isCommentLine(lineText) || isBlockComment; // check if the constructor is in a comment
 
       result.push({
         constructorParameters,
+        constructorInComment,
       });
     }
   }

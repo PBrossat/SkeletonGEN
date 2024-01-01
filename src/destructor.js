@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 const vscode = require("vscode");
-const { isComment } = require("./utils/commentUtil");
+const { isCommentLine, updateFlagIsBlockComment } = require("./utils/commentUtil");
 const { containsTildeFollowedByClassName } = require("./utils/destructorUtil");
 
 /**
@@ -50,12 +50,17 @@ function haveDestructor(file, className) {
   // Get the number of lines in the file
   const lineCount = file.lineCount;
 
+  let isBlockComment = false;
+
   // Browse the file line by line
   for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
     const lineText = file.lineAt(lineIndex).text;
 
-    // Ignore comments line (c++ or c style)
-    if(isComment(lineText)){
+    // Update the flag isBlockComment if the line contains /* or */
+    isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
+
+    // Ignore comments line (c++ or c style) or comment block
+    if(isCommentLine(lineText) || isBlockComment){
       continue;
     }
 
