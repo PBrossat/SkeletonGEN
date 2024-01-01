@@ -1,5 +1,5 @@
 const vscode = require("vscode");
-const { workspace } = vscode;
+const { workspace,window } = vscode;
 const { TextEncoder } = require("util");
 
 // Import all the functions
@@ -15,20 +15,35 @@ const { getClassName } = require("./utils/classUtil");
 // TODO : Jest test for the extension (all the functions)
 // TODO : When change signature of a method, change the signature in the .cpp file (if the method already exists)
 
+
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
+
+
+  // Create a status bar item
+  const statusBarItem = window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right,
+    100
+  ); // 100 is the most right position
+
+  // Set the text of the status bar item
+  statusBarItem.text = "$(icon-skeletongen) SkeletonGEN"; // TODO Fixe 
+  statusBarItem.command = "skeletongen.SkeletonGEN";
+  statusBarItem.tooltip = "Generate the skeleton of the .cpp file";
+  statusBarItem.show(); // Show the status bar item
+  
   let disposable = vscode.commands.registerCommand(
     "skeletongen.SkeletonGEN",
     async function () {
       // The code you place here will be executed every time your command is executed
 
       // Get the active text editor
-      const editor = vscode.window.activeTextEditor;
+      const editor = window.activeTextEditor;
 
       if (!editor) {
-        vscode.window.showInformationMessage("No editor is active.");
+       window.showInformationMessage("No editor is active.");
         return;
       }
 
@@ -37,7 +52,7 @@ function activate(context) {
 
       // If the extension is not .h, show an error message
       if (fileExtension !== "h") {
-        vscode.window.showErrorMessage("The file extension is not .h");
+       window.showErrorMessage("The file extension is not .h");
         return;
       }
 
@@ -63,9 +78,9 @@ function activate(context) {
       if (!cppFileExists) {
         try {
           await workspace.fs.writeFile(cppFile, new Uint8Array());
-          vscode.window.showInformationMessage("The .cpp file has been created");
+         window.showInformationMessage("The .cpp file has been created");
         } catch (error) {
-          vscode.window.showErrorMessage("Error creating .cpp file:", error.message);
+         window.showErrorMessage("Error creating .cpp file:", error.message);
           return;
         }
       }
@@ -78,7 +93,7 @@ function activate(context) {
         fileDefinition = await vscode.workspace.openTextDocument(cppFile);
       } catch (error) {
         // Handle errors, e.g., the file doesn't exist yet
-        vscode.window.showErrorMessage("Error opening .cpp file :", error.message);
+       window.showErrorMessage("Error opening .cpp file :", error.message);
         return;
       }
 
@@ -98,12 +113,12 @@ function activate(context) {
         await workspace.fs.writeFile(cppFile, new TextEncoder().encode(cppFileContent));
       }
       catch (error) {
-        vscode.window.showErrorMessage("Error writing in .cpp file :", error.message);
+       window.showErrorMessage("Error writing in .cpp file :", error.message);
         return;
       }
 
       // Display a succes message box to the user
-      vscode.window.showInformationMessage("Your .cpp file is ready !");
+     window.showInformationMessage("Your .cpp file is ready !");
     }
   );
 
