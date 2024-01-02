@@ -8,13 +8,27 @@ function isCommentLine(lineText) {
     return lineText.trim().startsWith('//');
 }
 
-
+/**
+ * Update the flag isBlockComment according to the current line.
+ * 
+ * @param {string} lineText - The current line text.
+ * @param {boolean} isBlockComment - The current flag value.
+ * @returns {boolean} - True if the current line is on a block comment, false otherwise.
+ */
 function updateFlagIsBlockComment(lineText, isBlockComment) {
-    if (lineText.includes("/*")) {
+    
+    // If the line contains both /* and */, it means that the block comment is finished
+    if (lineText.includes("/*") && lineText.includes("*/")) {
         isBlockComment = true;
     }
 
-    if (lineText.includes("*/")) {
+    // If the line contains /* but not */, it means that the block comment is not finished
+    if (lineText.includes("/*") && !lineText.includes("*/")) {
+        isBlockComment = true;
+    }
+
+    // If the line contains */ but not /*, it means that the block comment is finished
+    if (!lineText.includes("/*") && lineText.includes("*/")) {
         isBlockComment = false;
     }
 

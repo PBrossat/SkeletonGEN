@@ -10,7 +10,7 @@ const vscode = require('vscode');
 function getClassName(file) {
     const fileContent = file.getText();
     const className = fileContent.match(/class\s+([a-zA-Z0-9_]+)/)[1]; // class [space] name
-    return className;
+    return className; 
 }
   
 module.exports = {
