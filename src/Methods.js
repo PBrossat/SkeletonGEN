@@ -98,6 +98,7 @@ function MethodAlreadyImplemented(file, method, className) {
   const result = [];
   let isBlockComment = false;
 
+
   const parameters = method.parameters.replace(/([()])/g, "\\$1"); // Escape the parentheses
 
   const methodRegex = new RegExp(
@@ -107,27 +108,30 @@ function MethodAlreadyImplemented(file, method, className) {
   // Browse the file line by line in order to find the method implementation (if it exists)
   for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
     const lineText = file.lineAt(lineIndex).text;
+
+    // Update the flag isBlockComment if the line contains /* or */
+    isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
   
     // If the method is found ([return type] [class name]::[method name] ([parameters]))
     if (lineText.match(methodRegex)) {
 
-      result.push(lineText);
-      let numberOfOpenBrackets; 
-
-      // If the line of the method's signature contains "{", initialize the number of open brackets to 1
-      if (lineText.includes("{")) {
-        numberOfOpenBrackets = 1;
-      } else {
-        numberOfOpenBrackets = 0;
+      if (isBlockComment) {
+        result.push("/*");
       }
+
+      // If the line contains {, increment the number of open brackets
+      let numberOfOpenBrackets = lineText.includes("{") ? 1 : 0;
+
+      result.push(lineText);
 
       // Browse the file line by line starting from the next line
       for (let nextLineIndex = lineIndex + 1; nextLineIndex < lineCount; nextLineIndex++) {
         const currentLineText = file.lineAt(nextLineIndex).text;
 
-        // If the line is on a comment, we increment the number of lines of the method implementation and add the comment line to the result
         isBlockComment = updateFlagIsBlockComment(currentLineText, isBlockComment);
-        if (isBlockComment || isCommentLine(currentLineText)) {
+        
+        // If the line is on a comment, we increment the number of lines of the method implementation and add the comment line to the result
+        if (isCommentLine(currentLineText)) {
           result.push(currentLineText);
           continue;
         }
@@ -142,20 +146,25 @@ function MethodAlreadyImplemented(file, method, className) {
           numberOfOpenBrackets--;
         }
         
-        // If the number of open brackets is equal to 0, we reached the end of the method implementation
+        // Not the end of the method implementation yet
         if (numberOfOpenBrackets === 0) {
           result.push(currentLineText);
+
+          // If the method implementation is in a block comment, we add the closing comment tag
+          if (isBlockComment) {
+            result.push("*/");
+          }
+
           return result; // Not necessary to browse the rest of the file
         }
 
-        // If the number of open brackets is not equal to 0, we continue to browse the file
+        // We continue to browse the file
         result.push(currentLineText);
       }
     }
   }
 
-  console.log(result);
-  return result.length !== 0 ? result : null;
+  return result.length !== 0 ? result : [];
 }
 
 
