@@ -16,7 +16,10 @@ const { getClassName } = require("./utils/classUtil");
 // TODO : When change signature of a method, change the signature in the .cpp file (if the method already exists)
 // TODO : Gest the operator surcharges
 // TODO : Gest the CONST methods
-// TODO : for already implemented methods in cpp file, verify well if the } is the real LAST } of the method (not a } of a if, for, while, etc...)
+// TODO : add function to know if the constructor, constructor w/ param, destructor are already implemented in the .cpp file (like the methods)
+// TODO : Gest include in cpp file
+
+
 
 /**
  * @param {vscode.ExtensionContext} context
