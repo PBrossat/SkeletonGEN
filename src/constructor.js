@@ -103,7 +103,7 @@ function createConstructorWithParametersSkeleton(file, constructor, className) {
 
   // If the constructor with parameters is already implemented, we keep the implementation and append it to the skeleton
   if (constructorWithParametersAlreadyImplemented) {
-    constructorWithParametersSkeleton = `${constructorWithParametersAlreadyImplemented[1]}\n\n`;
+    constructorWithParametersSkeleton += `${constructorWithParametersAlreadyImplemented[1]}\n\n`;
   }
   // If the method is not implemented and not in a comment, we create a skeleton
   else if (!constructor.constructorInComment && !constructorWithParametersAlreadyImplemented){
