@@ -68,7 +68,10 @@ function createMethodSkeleton(file, method, className) {
 
   // If the method is already implemented, we keep the implementation and append it to the skeleton
   if (isMethodAlreadyImplemented) {
-    methodSkeleton = `${isMethodAlreadyImplemented[1]}\n\n`;
+    for (let i = 0; i < isMethodAlreadyImplemented.length; i++) {
+      methodSkeleton += `${isMethodAlreadyImplemented[i]}\n`;
+    }
+    methodSkeleton += `\n`;
   }
   // If the method is not implemented and not in a comment, we create a skeleton
   else if (!method.methodInComment && !isMethodAlreadyImplemented){
@@ -80,26 +83,79 @@ function createMethodSkeleton(file, method, className) {
   return methodSkeleton;
 }
 
+
 /**
  * Method to check if a method is already implemented in the C++ file (.cpp).
  * 
  * @param {vscode.TextDocument} file - The TextDocument representing the C++ file (definition file).
  * @param {{ returnType: string, methodName: string, parameters: string, methodInComment : boolean  }} method - An object representing a method signature, containing returnType, methodName, and parameters.
  * @param {string} className - The name of the main class.
- * @returns {Array} - An array containing the method implementation if it exists, null otherwise.
+ * @returns {Array} - An array containing the method implementation if it exists, null otherwise
  */
 function MethodAlreadyImplemented(file, method, className) {
 
+  const lineCount = file.lineCount;
+  const result = [];
+  let isBlockComment = false;
+
   const parameters = method.parameters.replace(/([()])/g, "\\$1"); // Escape the parentheses
 
-  // Create a regex to find the method implementation
   const methodRegex = new RegExp(
-    `(${method.returnType}\\s*${className}::${method.methodName}\\s*${parameters}\\s*{[^}]*})`
-  );
+    `(${method.returnType}\\s*${className}::${method.methodName}\\s*${parameters})`);
 
-  const methodAlreadyImplemented = file.getText().match(methodRegex);
+  
+  // Browse the file line by line in order to find the method implementation (if it exists)
+  for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
+    const lineText = file.lineAt(lineIndex).text;
+  
+    // If the method is found ([return type] [class name]::[method name] ([parameters]))
+    if (lineText.match(methodRegex)) {
 
-  return methodAlreadyImplemented; 
+      result.push(lineText);
+      let numberOfOpenBrackets; 
+
+      // If the line of the method's signature contains "{", initialize the number of open brackets to 1
+      if (lineText.includes("{")) {
+        numberOfOpenBrackets = 1;
+      } else {
+        numberOfOpenBrackets = 0;
+      }
+
+      // Browse the file line by line starting from the next line
+      for (let nextLineIndex = lineIndex + 1; nextLineIndex < lineCount; nextLineIndex++) {
+        const currentLineText = file.lineAt(nextLineIndex).text;
+
+        // If the line is on a comment, we increment the number of lines of the method implementation and add the comment line to the result
+        isBlockComment = updateFlagIsBlockComment(currentLineText, isBlockComment);
+        if (isBlockComment || isCommentLine(currentLineText)) {
+          result.push(currentLineText);
+          continue;
+        }
+
+        // If the line contains {, increment the number of open brackets
+        if (currentLineText.includes("{")) {
+          numberOfOpenBrackets++;
+        }
+
+        // If the line contains }, decrement the number of open brackets
+        if (currentLineText.includes("}")) {
+          numberOfOpenBrackets--;
+        }
+        
+        // If the number of open brackets is equal to 0, we reached the end of the method implementation
+        if (numberOfOpenBrackets === 0) {
+          result.push(currentLineText);
+          return result; // Not necessary to browse the rest of the file
+        }
+
+        // If the number of open brackets is not equal to 0, we continue to browse the file
+        result.push(currentLineText);
+      }
+    }
+  }
+
+  console.log(result);
+  return result.length !== 0 ? result : null;
 }
 
 
