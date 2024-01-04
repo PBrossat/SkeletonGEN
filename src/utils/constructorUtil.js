@@ -5,7 +5,7 @@
 * @param {string} className - The name of the main class.
 * @returns {boolean} - True if the line contains the class name followed by a parenthesis, false otherwise.
 */
-function containsClassNameFOllowedByParenthesis(lineText, className) {
+function containsClassNameFollowedByParenthesis(lineText, className) {
 
     // If className contains other than letters
     if (!/^[a-zA-Z]+$/.test(className)) {
@@ -17,5 +17,5 @@ function containsClassNameFOllowedByParenthesis(lineText, className) {
 }
 
 module.exports = {
-    containsClassNameFOllowedByParenthesis,
+    containsClassNameFollowedByParenthesis,
 };
