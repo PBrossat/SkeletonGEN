@@ -10,6 +10,7 @@ const { createDestructor } = require("./destructor");
 const { createMethodSkeleton } = require("./methods");
 
 /**
+ * Create the skeleton of the class
  *
  * @param {vscode.TextDocument} fileHeader - The TextDocument representing the header file (.h).
  * @param {vscode.TextDocument} fileDefinition - The TextDocument representing the definition file (.cpp).
