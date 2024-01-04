@@ -1,10 +1,12 @@
 // eslint-disable-next-line no-unused-vars
 const vscode = require("vscode");
-const { isCommentLine, updateFlagIsBlockComment } = require("./utils/commentUtil");
-
+const {
+  isCommentLine,
+  updateFlagIsBlockComment,
+} = require("./utils/commentUtil");
 
 /**
- * Extracts and parses method signatures from a C++ file (.h). 
+ * Extracts and parses method signatures from a C++ file (.h).
  * It ignores inline methods and comments methods.
  *
  * @param {vscode.TextDocument} file - The TextDocument representing the C++ file.
@@ -25,7 +27,9 @@ function getAllMethodsWithSignature(file) {
     isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
 
     // If the method is found ([return type] [method name] ([parameters]))
-    const methodRegex = new RegExp(/\b\s*(?:inline\s+)?\s*[a-zA-Z0-9_]+\s+[a-zA-Z0-9_]+\s*\([^\)]*\)/g);
+    const methodRegex = new RegExp(
+      /\b\s*(?:inline\s+)?\s*[a-zA-Z0-9_]+\s+[a-zA-Z0-9_]+\s*\([^\)]*\)/g
+    );
 
     const matchResult = lineText.match(methodRegex);
 
@@ -52,69 +56,35 @@ function getAllMethodsWithSignature(file) {
   return result;
 }
 
-
 /**
- * Extracts the method implementation from the C++ file (.cpp) if it already exists else, creates a skeleton.
+ * Method to check if a method is already implemented in the C++ file (.cpp) and extract the implementation (if it exists)
  *
- * @param {vscode.TextDocument} file - The TextDocument representing the C++ file.
- * @param {{ returnType: string, methodName: string, parameters: string , methodInComment : Boolean}} method - An object representing a method signature, containing returnType, methodName, and parameters.
- * @param {string} className - The name of the main class.
- * @returns {string} - True if the method is already implemented, false otherwise.
- */
-function createMethodSkeleton(file, method, className) {
-  let methodSkeleton = "";
-
-  const isMethodAlreadyImplemented = MethodAlreadyImplemented(file, method, className);
-
-  // If the method is already implemented, we keep the implementation and append it to the skeleton
-  if (isMethodAlreadyImplemented) {
-    for (let i = 0; i < isMethodAlreadyImplemented.length; i++) {
-      methodSkeleton += `${isMethodAlreadyImplemented[i]}\n`;
-    }
-    methodSkeleton += `\n`;
-  }
-  // If the method is not implemented and not in a comment, we create a skeleton
-  else if (!method.methodInComment && !isMethodAlreadyImplemented){
-    methodSkeleton += `${method.returnType} ${className}::${method.methodName}${method.parameters}\n`;
-    methodSkeleton += `{\n\t// TODO : implement the method : ${method.methodName} \n} `;
-    methodSkeleton += `\n\n`;
-  }
-
-  return methodSkeleton;
-}
-
-
-/**
- * Method to check if a method is already implemented in the C++ file (.cpp).
- * 
  * @param {vscode.TextDocument} file - The TextDocument representing the C++ file (definition file).
  * @param {{ returnType: string, methodName: string, parameters: string, methodInComment : boolean  }} method - An object representing a method signature, containing returnType, methodName, and parameters.
  * @param {string} className - The name of the main class.
- * @returns {Array} - An array containing the method implementation if it exists, null otherwise
+ * @returns {string[]} An array containing the method implementation if it exists, empty array otherwise
  */
-function MethodAlreadyImplemented(file, method, className) {
-
+function methodAlreadyImplemented(file, method, className) {
   const lineCount = file.lineCount;
   const result = [];
   let isBlockComment = false;
 
-
   const parameters = method.parameters.replace(/([()])/g, "\\$1"); // Escape the parentheses
 
+  // Regex to find the method implementation ([return type] [class name]::[method name] ([parameters]))
   const methodRegex = new RegExp(
-    `(${method.returnType}\\s*${className}::${method.methodName}\\s*${parameters})`);
+    `(${method.returnType}\\s*${className}::${method.methodName}\\s*${parameters})`
+  );
 
-  
   // Browse the file line by line in order to find the method implementation (if it exists)
   for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
     const lineText = file.lineAt(lineIndex).text;
 
     // Update the flag isBlockComment if the line contains /* or */
     isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
-  
+
     // If the method is found ([return type] [class name]::[method name] ([parameters]))
     if (lineText.match(methodRegex)) {
-
       if (isBlockComment) {
         result.push("/*");
       }
@@ -125,11 +95,18 @@ function MethodAlreadyImplemented(file, method, className) {
       result.push(lineText);
 
       // Browse the file line by line starting from the next line
-      for (let nextLineIndex = lineIndex + 1; nextLineIndex < lineCount; nextLineIndex++) {
+      for (
+        let nextLineIndex = lineIndex + 1;
+        nextLineIndex < lineCount;
+        nextLineIndex++
+      ) {
         const currentLineText = file.lineAt(nextLineIndex).text;
 
-        isBlockComment = updateFlagIsBlockComment(currentLineText, isBlockComment);
-        
+        isBlockComment = updateFlagIsBlockComment(
+          currentLineText,
+          isBlockComment
+        );
+
         // If the line is on a comment, we increment the number of lines of the method implementation and add the comment line to the result
         if (isCommentLine(currentLineText)) {
           result.push(currentLineText);
@@ -145,8 +122,8 @@ function MethodAlreadyImplemented(file, method, className) {
         if (currentLineText.includes("}")) {
           numberOfOpenBrackets--;
         }
-        
-        // Not the end of the method implementation yet
+
+        // The method implementation is finished
         if (numberOfOpenBrackets === 0) {
           result.push(currentLineText);
 
@@ -167,6 +144,41 @@ function MethodAlreadyImplemented(file, method, className) {
   return result.length !== 0 ? result : [];
 }
 
+/**
+ * Extracts the method implementation from the C++ file (.cpp) if it already exists else, creates a skeleton.
+ *
+ * @param {vscode.TextDocument} file - The TextDocument representing the C++ file.
+ * @param {{ returnType: string, methodName: string, parameters: string , methodInComment : Boolean}} method - An object representing a method signature, containing returnType, methodName, and parameters.
+ * @param {string} className - The name of the main class.
+ * @returns {string} - True if the method is already implemented, false otherwise.
+ */
+function createMethodSkeleton(file, method, className) {
+  let methodSkeleton = "";
+
+  const arrayMethodImplemented = methodAlreadyImplemented(
+    file,
+    method,
+    className
+  );
+
+  const isMethodAlreadyImplemented = arrayMethodImplemented.length !== 0;
+
+  // If the method is already implemented, we keep the implementation and append it to the skeleton
+  if (isMethodAlreadyImplemented) {
+    for (let i = 0; i < arrayMethodImplemented.length; i++) {
+      methodSkeleton += `${arrayMethodImplemented[i]}\n`;
+    }
+    methodSkeleton += `\n`;
+  }
+  // If the method is not implemented and not in a comment in the header file, we create a skeleton
+  else if (!method.methodInComment && !isMethodAlreadyImplemented) {
+    methodSkeleton += `${method.returnType} ${className}::${method.methodName}${method.parameters}\n`;
+    methodSkeleton += `{\n\t// TODO : implement the method : ${method.methodName} \n} `;
+    methodSkeleton += `\n\n`;
+  }
+
+  return methodSkeleton;
+}
 
 module.exports = {
   getAllMethodsWithSignature,
