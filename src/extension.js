@@ -1,32 +1,26 @@
 const vscode = require("vscode");
-const { workspace,window } = vscode;
+const { workspace, window } = vscode;
 const { TextEncoder } = require("util");
 
 // Import all the functions
 const { createSkeleton } = require("./skeleton");
-const { getAllMethodsWithSignature } = require("./Methods");
-const { getAllConstructorWithParameters } = require("./constructor");
+const { getAllMethodsWithSignature } = require("./methods");
+const { getAllConstructorWithParameters } = require("./constructorParam");
 const { getClassName } = require("./utils/classUtil");
 
-
-
-
-// TODO : Add icon to the extension
-// TODO : Jest test for the extension (all the functions)
-// TODO : When change signature of a method, change the signature in the .cpp file (if the method already exists)
-// TODO : Gest the operator surcharges
-// TODO : Gest the CONST methods
-// TODO : add function to know if the constructor, constructor w/ param, destructor are already implemented in the .cpp file (like the methods)
-// TODO : Gest include in cpp file
-
-
+// TODO: Add icon to the extension
+// (TODO: Jest test for the extension (all the functions))
+// (TODO: When change signature of a method, change the signature in the .cpp file (if the method already exists))
+// TODO: Gest the operator surcharges
+// TODO: Gest the CONST methods
+// TODO: Gest virtual methods
+// TODO: add function to know if the constructor, constructor w/ param, destructor are already implemented in the .cpp file (like the methods)
+// TODO: Gest include in cpp file
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-
-
   // Create a status bar item
   const statusBarItem = window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
@@ -34,11 +28,11 @@ function activate(context) {
   ); // 100 is the most right position
 
   // Set the text of the status bar item
-  statusBarItem.text = "$(icon-skeletongen) SkeletonGEN"; // TODO Fixe 
+  statusBarItem.text = "$(icon-skeletongen) SkeletonGEN"; // TODO Fixe
   statusBarItem.command = "skeletongen.SkeletonGEN";
   statusBarItem.tooltip = "Generate the skeleton of the .cpp file";
   statusBarItem.show(); // Show the status bar item
-  
+
   let disposable = vscode.commands.registerCommand(
     "skeletongen.SkeletonGEN",
     async function () {
@@ -48,7 +42,7 @@ function activate(context) {
       const editor = window.activeTextEditor;
 
       if (!editor) {
-       window.showInformationMessage("No editor is active.");
+        window.showInformationMessage("No editor is active.");
         return;
       }
 
@@ -57,7 +51,7 @@ function activate(context) {
 
       // If the extension is not .h, show an error message
       if (fileExtension !== "h") {
-       window.showErrorMessage("The file extension is not .h");
+        window.showErrorMessage("The file extension is not .h");
         return;
       }
 
@@ -83,13 +77,12 @@ function activate(context) {
       if (!cppFileExists) {
         try {
           await workspace.fs.writeFile(cppFile, new Uint8Array());
-         window.showInformationMessage("The .cpp file has been created");
+          window.showInformationMessage("The .cpp file has been created");
         } catch (error) {
-         window.showErrorMessage("Error creating .cpp file:", error.message);
+          window.showErrorMessage("Error creating .cpp file:", error.message);
           return;
         }
       }
-
 
       const fileHeader = editor.document; // the Header file (.h)
 
@@ -98,7 +91,7 @@ function activate(context) {
         fileDefinition = await vscode.workspace.openTextDocument(cppFile);
       } catch (error) {
         // Handle errors, e.g., the file doesn't exist yet
-       window.showErrorMessage("Error opening .cpp file :", error.message);
+        window.showErrorMessage("Error opening .cpp file :", error.message);
         return;
       }
 
@@ -112,18 +105,19 @@ function activate(context) {
         getAllConstructorWithParameters(fileHeader, getClassName(fileHeader)) // Get all the constructors with parameters of the class
       );
 
-      
       // Write the skeleton in the new file
       try {
-        await workspace.fs.writeFile(cppFile, new TextEncoder().encode(cppFileContent));
-      }
-      catch (error) {
-       window.showErrorMessage("Error writing in .cpp file :", error.message);
+        await workspace.fs.writeFile(
+          cppFile,
+          new TextEncoder().encode(cppFileContent)
+        );
+      } catch (error) {
+        window.showErrorMessage("Error writing in .cpp file :", error.message);
         return;
       }
 
       // Display a succes message box to the user
-     window.showInformationMessage("Your .cpp file is ready !");
+      window.showInformationMessage("Your .cpp file is ready !");
     }
   );
 
