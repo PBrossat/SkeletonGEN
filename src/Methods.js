@@ -4,13 +4,14 @@ const {
   isCommentLine,
   updateFlagIsBlockComment,
 } = require("./utils/commentUtil");
+const { browseFileToGetImplementation } = require("./utils/browserFile");
 
 /**
  * Extracts and parses method signatures from a C++ file (.h).
  * It ignores inline methods and comments methods.
  *
  * @param {vscode.TextDocument} file - The TextDocument representing the C++ file.
- * @returns {Array<{ returnType: string, methodName: string, parameters: string, methodInComment: boolean }>} - An array of objects representing method signatures, each containing returnType, methodName, and parameters.
+ * @returns {{ returnType: string, methodName: string, parameters: string, methodInComment: boolean }[]} - An array of objects representing method signatures, each containing returnType, methodName, and parameters.
  */
 function getAllMethodsWithSignature(file) {
   const lineCount = file.lineCount;
@@ -57,108 +58,26 @@ function getAllMethodsWithSignature(file) {
 }
 
 /**
- * Method to check if a method is already implemented in the C++ file (.cpp) and extract the implementation (if it exists)
- *
- * @param {vscode.TextDocument} file - The TextDocument representing the C++ file (definition file).
- * @param {{ returnType: string, methodName: string, parameters: string, methodInComment : boolean  }} method - An object representing a method signature, containing returnType, methodName, and parameters.
- * @param {string} className - The name of the main class.
- * @returns {string[]} An array containing the method implementation if it exists, empty array otherwise
- */
-function methodAlreadyImplemented(file, method, className) {
-  const lineCount = file.lineCount;
-  const result = [];
-  let isBlockComment = false;
-
-  const parameters = method.parameters.replace(/([()])/g, "\\$1"); // Escape the parentheses
-
-  // Regex to find the method implementation ([return type] [class name]::[method name] ([parameters]))
-  const methodRegex = new RegExp(
-    `(${method.returnType}\\s*${className}::${method.methodName}\\s*${parameters})`
-  );
-
-  // Browse the file line by line in order to find the method implementation (if it exists)
-  for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
-    const lineText = file.lineAt(lineIndex).text;
-
-    // Update the flag isBlockComment if the line contains /* or */
-    isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
-
-    // If the method is found ([return type] [class name]::[method name] ([parameters]))
-    if (lineText.match(methodRegex)) {
-      if (isBlockComment) {
-        result.push("/*");
-      }
-
-      // If the line contains {, increment the number of open brackets
-      let numberOfOpenBrackets = lineText.includes("{") ? 1 : 0;
-
-      result.push(lineText);
-
-      // Browse the file line by line starting from the next line
-      for (
-        let nextLineIndex = lineIndex + 1;
-        nextLineIndex < lineCount;
-        nextLineIndex++
-      ) {
-        const currentLineText = file.lineAt(nextLineIndex).text;
-
-        isBlockComment = updateFlagIsBlockComment(
-          currentLineText,
-          isBlockComment
-        );
-
-        // If the line is on a comment, we increment the number of lines of the method implementation and add the comment line to the result
-        if (isCommentLine(currentLineText)) {
-          result.push(currentLineText);
-          continue;
-        }
-
-        // If the line contains {, increment the number of open brackets
-        if (currentLineText.includes("{")) {
-          numberOfOpenBrackets++;
-        }
-
-        // If the line contains }, decrement the number of open brackets
-        if (currentLineText.includes("}")) {
-          numberOfOpenBrackets--;
-        }
-
-        // The method implementation is finished
-        if (numberOfOpenBrackets === 0) {
-          result.push(currentLineText);
-
-          // If the method implementation is in a block comment, we add the closing comment tag
-          if (isBlockComment) {
-            result.push("*/");
-          }
-
-          return result; // Not necessary to browse the rest of the file
-        }
-
-        // We continue to browse the file
-        result.push(currentLineText);
-      }
-    }
-  }
-
-  return result.length !== 0 ? result : [];
-}
-
-/**
  * Extracts the method implementation from the C++ file (.cpp) if it already exists else, creates a skeleton.
  *
  * @param {vscode.TextDocument} file - The TextDocument representing the C++ file.
  * @param {{ returnType: string, methodName: string, parameters: string , methodInComment : Boolean}} method - An object representing a method signature, containing returnType, methodName, and parameters.
  * @param {string} className - The name of the main class.
- * @returns {string} - True if the method is already implemented, false otherwise.
+ * @returns {string} - The skeleton of the method.
  */
 function createMethodSkeleton(file, method, className) {
   let methodSkeleton = "";
 
-  const arrayMethodImplemented = methodAlreadyImplemented(
+  const parameters = method.parameters.replace(/([()])/g, "\\$1"); // Escape the parentheses
+
+  const methodRegex = new RegExp(
+    `(${method.returnType}\\s*${className}::${method.methodName}\\s*${parameters})`
+  );
+
+  const arrayMethodImplemented = browseFileToGetImplementation(
     file,
-    method,
-    className
+    className,
+    methodRegex
   );
 
   const isMethodAlreadyImplemented = arrayMethodImplemented.length !== 0;
