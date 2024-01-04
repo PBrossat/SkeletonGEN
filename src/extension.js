@@ -14,6 +14,8 @@ const { getClassName } = require("./utils/classUtil");
 // TODO: Gest the operator surcharges
 // TODO: Gest the CONST methods
 // TODO: Gest virtual methods
+// TODO: Gest static methods
+// TODO: rework method to get all methods with signature (to get the return type, the name of the method and the parameters WELL)
 // TODO: Gest include in cpp file
 
 /**

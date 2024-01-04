@@ -27,32 +27,51 @@ function getAllMethodsWithSignature(file) {
     // Update the flag isBlockComment if the line contains /* or */
     isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
 
-    // If the method is found ([return type] [method name] ([parameters]))
+    // If the method is found ([inline] [return type] [method name] ([parameters])[const])
     const methodRegex = new RegExp(
-      /\b\s*(?:inline\s+)?\s*[a-zA-Z0-9_]+\s+[a-zA-Z0-9_]+\s*\([^\)]*\)/g
+      /\b\s*(?:inline\s+)?\s*(virtual\s+)?\s*(unsigned|short|long)?\s*[a-zA-Z0-9_]+\s+[a-zA-Z0-9_]+\s*\([^\)]*\)(?:\s*const)?/g
     );
 
     const matchResult = lineText.match(methodRegex);
 
     if (matchResult) {
-      // If it's inline, skip it
-      if (/\binline\b/.test(lineText)) {
+      const methodDeclaration = matchResult[0];
+      
+      // Ensure 'inline' is before the return type in the method declaration
+      const inlineIndex = methodDeclaration.indexOf('inline');
+      //const virtualIndex = methodDeclaration.indexOf('virtual');
+      const nameMethodIndex = methodDeclaration.indexOf(
+        matchResult[0].split(" ")[1].split("(")[0]
+      );
+
+      console.log(
+        inlineIndex,
+        nameMethodIndex,
+        matchResult[0].split(" ")[1].split("(")[0]
+      );
+
+      if(inlineIndex !== -1 && inlineIndex < nameMethodIndex) {
         continue;
       }
+      
+
 
       const returnType = matchResult[0].match(/[a-zA-Z0-9_]+/)[0]; // get the return type
       const methodName = matchResult[0].split(" ")[1].split("(")[0]; // get the method name
       const parameters = matchResult[0].match(/\([^\)]*\)/)[0]; // get the parameters (if exist)
       const methodInComment = isCommentLine(lineText) || isBlockComment; // check if the method is in a comment
+      const isConst = /\bconst\b/.test(lineText); // check if the method is const
 
       result.push({
         returnType,
         methodName,
         parameters,
         methodInComment,
+        isConst,
       });
     }
   }
+
 
   return result;
 }
