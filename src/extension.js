@@ -14,7 +14,6 @@ const { getClassName } = require("./utils/classUtil");
 // TODO: Gest the operator surcharges
 // TODO: Gest the CONST methods
 // TODO: Gest virtual methods
-// TODO: add function to know if the constructor, constructor w/ param, destructor are already implemented in the .cpp file (like the methods)
 // TODO: Gest include in cpp file
 
 /**
