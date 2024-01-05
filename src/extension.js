@@ -16,6 +16,7 @@ const { getClassName } = require("./utils/classUtil");
 // TODO: Gest virtual methods
 // TODO: Gest static methods
 // TODO: rework method to get all methods with signature (to get the return type, the name of the method and the parameters WELL)
+// ===> Split tous les mots de la methodes dans un tableau et on joue avec
 // TODO: Gest include in cpp file
 
 /**
