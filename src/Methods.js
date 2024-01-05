@@ -36,9 +36,9 @@ function getAllMethodsWithSignature(file) {
 
     if (matchResult) {
       const methodDeclaration = matchResult[0];
-      
+
       // Ensure 'inline' is before the return type in the method declaration
-      const inlineIndex = methodDeclaration.indexOf('inline');
+      const inlineIndex = methodDeclaration.indexOf("inline");
       //const virtualIndex = methodDeclaration.indexOf('virtual');
       const nameMethodIndex = methodDeclaration.indexOf(
         matchResult[0].split(" ")[1].split("(")[0]
@@ -50,11 +50,9 @@ function getAllMethodsWithSignature(file) {
         matchResult[0].split(" ")[1].split("(")[0]
       );
 
-      if(inlineIndex !== -1 && inlineIndex < nameMethodIndex) {
+      if (inlineIndex !== -1 && inlineIndex < nameMethodIndex) {
         continue;
       }
-      
-
 
       const returnType = matchResult[0].match(/[a-zA-Z0-9_]+/)[0]; // get the return type
       const methodName = matchResult[0].split(" ")[1].split("(")[0]; // get the method name
@@ -71,7 +69,6 @@ function getAllMethodsWithSignature(file) {
       });
     }
   }
-
 
   return result;
 }
