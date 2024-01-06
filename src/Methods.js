@@ -88,10 +88,8 @@ function getAllMethodsWithSignature(file) {
       }
 
       // Browse the right part of the method declaration if it exists
-      if (rightPartOfSignature) {
-        if (rightPartOfSignature.includes("const")) {
-          isConstMethod = true;
-        }
+      if (rightPartOfSignature.includes("const")) {
+        isConstMethod = true;
       }
 
       result.push({
