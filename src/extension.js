@@ -12,11 +12,7 @@ const { getClassName } = require("./utils/classUtil");
 // (TODO: Jest test for the extension (all the functions))
 // (TODO: When change signature of a method, change the signature in the .cpp file (if the method already exists))
 // TODO: Gest the operator surcharges
-// TODO: Gest the CONST methods
-// TODO: Gest virtual methods
-// TODO: Gest static methods
-// TODO: rework method to get all methods with signature (to get the return type, the name of the method and the parameters WELL)
-// ===> Split tous les mots de la methodes dans un tableau et on joue avec
+// TODO: Check, in method function, regex find constructor / destructor ==> don't 
 // TODO: Gest include in cpp file
 
 /**
