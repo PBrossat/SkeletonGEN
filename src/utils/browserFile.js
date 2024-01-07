@@ -3,14 +3,14 @@ const vscode = require("vscode");
 const { isCommentLine, updateFlagIsBlockComment } = require("./commentUtil");
 
 /**
- * Method to check if the method, constructor or destructor is already implemented in the file (cpp file) and extract the implementation (if it exists)
+ * Method to check if the method, constructor or destructor is already implemented in the definition file (cpp file) and extract the implementation (if it exists)
  *
  * @param {vscode.TextDocument} file - The file we want to browse
  * @param {string} className - The name of the main class
- * @param {RegExp} regex - The regex to match the line we want to find
+ * @param {string} methodSignature - The signature of the method without spaces
  * @returns {string[]} An array containing the implementation if it exists, empty array otherwise
  */
-function browseFileToGetImplementation(file, className, regex) {
+function browseFileToGetImplementation(file, className, methodSignature) {
   const lineCount = file.lineCount;
   const result = [];
   let isBlockComment = false;
@@ -19,11 +19,15 @@ function browseFileToGetImplementation(file, className, regex) {
   for (let lineIndex = 0; lineIndex < lineCount; lineIndex++) {
     const lineText = file.lineAt(lineIndex).text;
 
+    // Remove all spaces from lineText to match with same signature but not same indentation
+    const lineTextWithoutSpaces = lineText.replace(/\s/g, "");
+
     // Update the flag isBlockComment if the line contains /* or */
     isBlockComment = updateFlagIsBlockComment(lineText, isBlockComment);
 
-    // if the line match the regex in parameter
-    if (lineText.match(regex)) {
+    // If the current line is equal to the method signature without spaces, we found the implementation
+    if (lineTextWithoutSpaces === methodSignature) {
+      
       if (isBlockComment) {
         result.push("/*");
       }
@@ -71,7 +75,7 @@ function browseFileToGetImplementation(file, className, regex) {
             result.push("*/");
           }
 
-          return result; // Not necessary to browse the rest of the file
+          return result;
         }
 
         // We continue to browse the file
