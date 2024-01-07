@@ -83,11 +83,13 @@ function getAllMethodsWithSignature(file,className) {
       let isConstMethod = false;
       const methodInComment = isCommentLine(lineText) || isBlockComment; // check if the method is in a comment
 
+
       // Split the method declaration in two parts : the left part (return type + method name) and the right part (parameters + const)
       const splitedArray = methodDeclaration.split("("); 
 
       const leftPartOfSignature = splitedArray[0].split(" "); // The return type, the method name and could be other keywords from C++
-      const rightPartOfSignature = splitedArray[1]; // Could be "const" or nothing
+      // TODO: Making this more readable
+      const rightPartOfSignature = splitedArray[1].split(")")[1]; // Could be "const" or nothing
 
       // Special case : if constructor or destructor is found, we skip it
       if(leftPartOfSignature.length === 1 && leftPartOfSignature[0] === className) continue;
