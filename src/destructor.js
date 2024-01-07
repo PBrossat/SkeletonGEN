@@ -75,7 +75,7 @@ function createDestructor(fileHeader, fileDefinition, className) {
   }
   // If the destructor exist in .h and not implemented in .cpp, we create the skeleton
   else if (haveDestructorInHeader && !isDestructorAlreadyImplemented) {
-    destructorSkeleton = `${className}::~${className}()\n`;
+    destructorSkeleton += `${className}::~${className}()\n`;
     destructorSkeleton += `{\n\t// TODO : implement the destructor\n}\n\n`;
   }
 
