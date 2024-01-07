@@ -12,11 +12,12 @@ const { getClassName } = require("./utils/classUtil");
 // (TODO: Jest test for the extension (all the functions))
 // (TODO: When change signature of a method, change the signature in the .cpp file (if the method already exists))
 // TODO: Gest the operator surcharges
-// TODO: Verif regex sans epsaces pour etres sur qu'on parle de la meme methodes (dans le cas où des espaces sont rajoutés dans la signature dans le .cpp <=> meme fonction mais pas reconnus par le regex)
 // TODO: Gest include in cpp file
 
 /**
- * @param {vscode.ExtensionContext} context
+ * This method is called when the extension is activated.
+ * 
+ * @param {vscode.ExtensionContext} context - The context of the extension.
  */
 function activate(context) {
   // Create a status bar item
@@ -122,10 +123,7 @@ function activate(context) {
   context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
-function deactivate() {}
 
 module.exports = {
   activate,
-  deactivate,
 };
