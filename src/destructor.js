@@ -51,16 +51,14 @@ function haveDestructor(file, className) {
 function createDestructor(fileHeader, fileDefinition, className) {
   let destructorSkeleton = "";
 
-  const destructorRegex = new RegExp(
-    `(${className}::~${className}\\s*\\(\\s*\\))`
-  );
+  const destructor = `${className}::~${className}()`;
 
   const haveDestructorInHeader = haveDestructor(fileHeader, className);
 
   const arrayOfDestructor = browseFileToGetImplementation(
     fileDefinition,
     className,
-    destructorRegex
+    destructor
   );
 
   // Check if the destructor is already implemented in the .cpp file (if the array is not empty)
