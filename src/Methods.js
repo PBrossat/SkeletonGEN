@@ -13,9 +13,10 @@ const { isReservedWord } = require("./utils/languageCpp");
  * If you read this, first you are a very curious person (I like that), second I appologize for the mess in this function but it works.
  *
  * @param {vscode.TextDocument} file - The TextDocument representing the C++ file.
+ * @param {string} className - The name of the main class.
  * @returns {{returnType: string, methodName: string, parameters: string, isConstMethod: boolean, methodInComment: boolean }[]} - An array of objects representing method signatures with other essential informations
  */
-function getAllMethodsWithSignature(file) {
+function getAllMethodsWithSignature(file,className) {
   const lineCount = file.lineCount;
 
   const result = [];
@@ -47,15 +48,49 @@ function getAllMethodsWithSignature(file) {
 
       let returnType = "";
       let methodName = "";
-      const parameters = methodDeclaration.match(/\([^\)]*\)/)[0]; // get the parameters (if exist)
+      let parametersMatch = methodDeclaration.match(/\([^\)]*\)/); // Get the parameters of the method
+      let parameters = parametersMatch ? parametersMatch[0] : ""; // Get the parameters of the method
+
+
+      // Special case : if parameters have default values (example: (int a = 0, int b = 0)), we remove the default values
+      // Because we don't need them to create the skeleton
+      if(parameters.includes("=")){
+        let removedElement = false;
+        for (let i = 0; i < parameters.length; i++) {
+          const element = parameters[i];
+
+          if(element === "=") {
+            removedElement = true;
+          }
+          if (element === "," || element === ")") 
+          {
+            removedElement = false;
+          }
+          if (removedElement) {
+            parameters = parameters.replace(element," ");
+          }
+        }
+
+        // removed the unnecessary spaces
+        parameters = parameters
+          .replace(/\s*(,\s*)/g, ",")
+          .replace(/\s*\)/g, ")");
+
+        // after each comma, we add a space (for the formatting)
+        parameters = parameters.replace(/,/g, ", ");
+      }
+
       let isConstMethod = false;
       const methodInComment = isCommentLine(lineText) || isBlockComment; // check if the method is in a comment
 
       // Split the method declaration in two parts : the left part (return type + method name) and the right part (parameters + const)
-      const splitedArray = methodDeclaration.split(parameters); 
+      const splitedArray = methodDeclaration.split("("); 
 
       const leftPartOfSignature = splitedArray[0].split(" "); // The return type, the method name and could be other keywords from C++
       const rightPartOfSignature = splitedArray[1]; // Could be "const" or nothing
+
+      // Special case : if constructor or destructor is found, we skip it
+      if(leftPartOfSignature.length === 1 && leftPartOfSignature[0] === className) continue;
 
       // Browse the left part of the method declaration
       for (let i = 0; i < leftPartOfSignature.length; i++) {
@@ -72,7 +107,7 @@ function getAllMethodsWithSignature(file) {
 
           const firstChar = element[0];
           const restOfElement = element.slice(1); 
-
+          
           returnType += `${firstChar}`;
           methodName += `${restOfElement}`;
         } 
@@ -109,17 +144,21 @@ function getAllMethodsWithSignature(file) {
  * Extracts the method implementation from the C++ file (.cpp) if it already exists else, creates a skeleton.
  *
  * @param {vscode.TextDocument} file - The TextDocument representing the C++ file.
- * @param {{isVirtualMethod: boolean, returnType: string, methodName: string, parameters: string, isConstMethod: boolean, methodInComment: boolean }} method - An object representing a method signature, containing returnType, methodName, and parameters.
+ * @param {{returnType: string, methodName: string, parameters: string, isConstMethod: boolean, methodInComment: boolean }} method - An object representing a method signature, containing returnType, methodName, and parameters.
  * @param {string} className - The name of the main class.
  * @returns {string} - The skeleton of the method.
  */
 function createMethodSkeleton(file, method, className) {
+
   let methodSkeleton = "";
 
-  const parameters = method.parameters.replace(/([()])/g, "\\$1"); // Escape the parentheses
+  // TODO: fix that
+  // we remove all the spaces from all components of the method signature
+  const methodName = method.methodName.replace(/\s/g, "");
+  const parameters = method.parameters.replace(/([()\s])/g, "\\$1"); // Escape the parentheses and the spaces
 
   const methodRegex = new RegExp(
-    `(${method.returnType}\\s*${className}::${method.methodName}\\s*${parameters})`
+    `(${method.returnType}\\s*${className}\\s*::\\s*${method.methodName}\\s*${parameters})`
   );
 
   const arrayMethodImplemented = browseFileToGetImplementation(
