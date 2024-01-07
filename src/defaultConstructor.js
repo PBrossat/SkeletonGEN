@@ -63,9 +63,8 @@ function haveDefaultConstructor(file, className) {
 function createDefaultConstructorSkeleton(fileHeader, fileDefinition, className) {
   let defaultConstructorSkeleton = "";
 
-  const defaultConstructorRegex = new RegExp(
-    `(${className}::${className}\\s*\\(\\s*\\))`
-  );
+  const defaultConstructor = `${className}::${className}()`;
+
 
   const haveDefaultConstructorInHeader = haveDefaultConstructor(
     fileHeader,
@@ -75,7 +74,7 @@ function createDefaultConstructorSkeleton(fileHeader, fileDefinition, className)
   const arrayOfDefaultConstructor = browseFileToGetImplementation(
     fileDefinition,
     className,
-    defaultConstructorRegex
+    defaultConstructor
   );
 
   const isDefaultConstructorImplemented = arrayOfDefaultConstructor.length !== 0;
