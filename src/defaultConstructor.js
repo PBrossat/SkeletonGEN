@@ -87,7 +87,7 @@ function createDefaultConstructorSkeleton(fileHeader, fileDefinition, className)
     defaultConstructorSkeleton += `\n`;
   } else if (haveDefaultConstructorInHeader && !isDefaultConstructorImplemented) {
     defaultConstructorSkeleton += `${className}::${className}()\n`;
-    defaultConstructorSkeleton += `{\n\t// TODO : implement the default constructor\n}\n\n `;
+    defaultConstructorSkeleton += `{\n\t// TODO : implement the default constructor\n}\n\n`;
   }
 
   return defaultConstructorSkeleton;
