@@ -152,19 +152,19 @@ function createMethodSkeleton(file, method, className) {
 
   let methodSkeleton = "";
 
-  // TODO: fix that
-  // we remove all the spaces from all components of the method signature
+  // We remove all the spaces from all components of the method signature
+  const returnType = method.returnType.replace(/\s/g, "");
   const methodName = method.methodName.replace(/\s/g, "");
-  const parameters = method.parameters.replace(/([()\s])/g, "\\$1"); // Escape the parentheses and the spaces
+  const parameters = method.parameters.replace(/\s/g, ""); 
 
-  const methodRegex = new RegExp(
-    `(${method.returnType}\\s*${className}\\s*::\\s*${method.methodName}\\s*${parameters})`
-  );
+  // The method signature without spaces (used to compare with the method implementation)
+  let methodSignature = `${returnType}${className}::${methodName}${parameters}`
+  if (method.isConstMethod) methodSignature += `const`; 
 
   const arrayMethodImplemented = browseFileToGetImplementation(
     file,
     className,
-    methodRegex
+    methodSignature
   );
 
   const isMethodAlreadyImplemented = arrayMethodImplemented.length !== 0;
