@@ -64,15 +64,13 @@ function getAllConstructorWithParameters(file, className) {
 function createConstructorWithParametersSkeleton(file, constructor, className) {
   let constructorParametersSkeleton = "";
 
-  const parameters = constructor.constructorParameters.replace(/([()])/g, "\\$1"); // Escape the parentheses
+  const parameters = constructor.constructorParameters.replace(/\s/g, "");
 
   // Regex to find the constructor with parameters ([className] :: [className] ([parameters]))
-  const constructorWithParamRegex = new RegExp(
-    `(${className}\\s*::\\s*${className}\\s*${parameters})`
-  );
+  const constructorWithParam = `${className}::${className}${parameters}`
 
   const arrayConstructorParameterImplemented =
-    browseFileToGetImplementation(file, className, constructorWithParamRegex);
+    browseFileToGetImplementation(file, className, constructorWithParam);
 
   const isConstructorAlreadyImplemented =
     arrayConstructorParameterImplemented.length !== 0;
