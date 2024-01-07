@@ -12,7 +12,7 @@ const { getClassName } = require("./utils/classUtil");
 // (TODO: Jest test for the extension (all the functions))
 // (TODO: When change signature of a method, change the signature in the .cpp file (if the method already exists))
 // TODO: Gest the operator surcharges
-// TODO: Check, in method function, regex find constructor / destructor ==> don't 
+// TODO: Verif regex sans epsaces pour etres sur qu'on parle de la meme methodes (dans le cas où des espaces sont rajoutés dans la signature dans le .cpp <=> meme fonction mais pas reconnus par le regex)
 // TODO: Gest include in cpp file
 
 /**
@@ -99,7 +99,7 @@ function activate(context) {
         fileDefinition,
         nameFile,
         getClassName(fileHeader),
-        getAllMethodsWithSignature(fileHeader), // Get all the methods of the class
+        getAllMethodsWithSignature(fileHeader, getClassName(fileHeader)), // Get all the methods of the class
         getAllConstructorWithParameters(fileHeader, getClassName(fileHeader)) // Get all the constructors with parameters of the class
       );
 
