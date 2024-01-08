@@ -12,11 +12,10 @@ const { getClassName } = require("./utils/classUtil");
 // (TODO: Jest test for the extension (all the functions))
 // (TODO: When change signature of a method, change the signature in the .cpp file (if the method already exists))
 // TODO: Gest the operator surcharges
-// TODO: Gest include in cpp file
 
 /**
  * This method is called when the extension is activated.
- * 
+ *
  * @param {vscode.ExtensionContext} context - The context of the extension.
  */
 function activate(context) {
@@ -122,7 +121,6 @@ function activate(context) {
 
   context.subscriptions.push(disposable);
 }
-
 
 module.exports = {
   activate,

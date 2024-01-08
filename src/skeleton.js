@@ -8,6 +8,7 @@ const {
 const { createDefaultConstructorSkeleton } = require("./defaultConstructor");
 const { createDestructor } = require("./destructor");
 const { createMethodSkeleton } = require("./methods");
+const { createIncludeSkeleton } = require("./include");
 
 /**
  * Create the skeleton of the class
@@ -29,8 +30,8 @@ function createSkeleton(
 ) {
   let skeleton = "";
 
-  // Create the header of the file (.cpp)
-  skeleton += `#include "${nameFile}.h"\n#include <iostream>\nusing namespace std;\n\n`;
+  // Create the include
+  skeleton += createIncludeSkeleton(fileDefinition, nameFile);
 
   // Create the constructor
   skeleton += createDefaultConstructorSkeleton(
