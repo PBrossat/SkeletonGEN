@@ -7,11 +7,13 @@ const { createSkeleton } = require("./skeleton");
 const { getAllMethodsWithSignature } = require("./methods");
 const { getAllConstructorWithParameters } = require("./constructorParam");
 const { getClassName } = require("./utils/classUtil");
+const { getOperatorOveloading } = require("./operator");
 
 // TODO: Add icon to the extension
 // (TODO: Jest test for the extension (all the functions))
 // (TODO: When change signature of a method, change the signature in the .cpp file (if the method already exists))
 // TODO: Gest the operator surcharges
+// TODO: Gest method with key word const on left part of sinature
 
 /**
  * This method is called when the extension is activated.

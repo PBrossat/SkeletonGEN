@@ -16,7 +16,7 @@ const { isReservedWord } = require("./utils/languageCpp");
  * @param {string} className - The name of the main class.
  * @returns {{returnType: string, methodName: string, parameters: string, isConstMethod: boolean, methodInComment: boolean }[]} - An array of objects representing method signatures with other essential informations
  */
-function getAllMethodsWithSignature(file,className) {
+function getAllMethodsWithSignature(file, className) {
   const lineCount = file.lineCount;
 
   const result = [];
@@ -28,7 +28,7 @@ function getAllMethodsWithSignature(file,className) {
     const lineText = file.lineAt(lineIndex).text;
 
     // Special case : if the line starts with #, we skip it
-    if(lineText.startsWith("#")){
+    if (lineText.startsWith("#")) {
       continue;
     }
 
@@ -43,31 +43,28 @@ function getAllMethodsWithSignature(file,className) {
     const matchResult = lineText.match(methodRegex);
 
     if (matchResult) {
-
-      const methodDeclaration = matchResult[0]; 
+      const methodDeclaration = matchResult[0];
 
       let returnType = "";
       let methodName = "";
       let parametersMatch = methodDeclaration.match(/\([^\)]*\)/); // Get the parameters of the method
       let parameters = parametersMatch ? parametersMatch[0] : ""; // Get the parameters of the method
 
-
       // Special case : if parameters have default values (example: (int a = 0, int b = 0)), we remove the default values
       // Because we don't need them to create the skeleton
-      if(parameters.includes("=")){
+      if (parameters.includes("=")) {
         let removedElement = false;
         for (let i = 0; i < parameters.length; i++) {
           const element = parameters[i];
 
-          if(element === "=") {
+          if (element === "=") {
             removedElement = true;
           }
-          if (element === "," || element === ")") 
-          {
+          if (element === "," || element === ")") {
             removedElement = false;
           }
           if (removedElement) {
-            parameters = parameters.replace(element," ");
+            parameters = parameters.replace(element, " ");
           }
         }
 
@@ -83,16 +80,19 @@ function getAllMethodsWithSignature(file,className) {
       let isConstMethod = false;
       const methodInComment = isCommentLine(lineText) || isBlockComment; // check if the method is in a comment
 
-
       // Split the method declaration in two parts : the left part (return type + method name) and the right part (parameters + const)
-      const splitedArray = methodDeclaration.split("("); 
+      const splitedArray = methodDeclaration.split("(");
 
       const leftPartOfSignature = splitedArray[0].split(" "); // The return type, the method name and could be other keywords from C++
       // TODO: Making this more readable
       const rightPartOfSignature = splitedArray[1].split(")")[1]; // Could be "const" or nothing
 
       // Special case : if constructor or destructor is found, we skip it
-      if(leftPartOfSignature.length === 1 && leftPartOfSignature[0] === className) continue;
+      if (
+        leftPartOfSignature.length === 1 &&
+        leftPartOfSignature[0] === className
+      )
+        continue;
 
       // Browse the left part of the method declaration
       for (let i = 0; i < leftPartOfSignature.length; i++) {
@@ -101,20 +101,22 @@ function getAllMethodsWithSignature(file,className) {
         // If the element is a reserved word (or contains * or &), we add it to the return type
         if (isReservedWord(element)) {
           if (element === "inline") continue principalLoop; // If the method is inline, we skip it because the implementation is already in the header file
-          if (element === "virtual" || element === "static") continue ; // If the method is virtual, we don't add it to the return type
+          if (element === "virtual" || element === "static") continue; // If the method is virtual, we don't add it to the return type
           returnType += `${element} `;
-        }   
+        }
         // Special case (auto format) : if the element starts with * or & (ex : *nameMethod or &nameMethod)
         else if (element[0] === "*" || element[0] === "&") {
-
           const firstChar = element[0];
-          const restOfElement = element.slice(1); 
-          
+          const restOfElement = element.slice(1);
+
           returnType += `${firstChar}`;
           methodName += `${restOfElement}`;
-        } 
+        }
         // This cas is for custom Return type (when we return a class for example)
-        else if (!isReservedWord(element) && i !== leftPartOfSignature.length - 1) {
+        else if (
+          !isReservedWord(element) &&
+          i !== leftPartOfSignature.length - 1
+        ) {
           returnType += `${element} `;
         }
         // It's the method name
@@ -151,17 +153,16 @@ function getAllMethodsWithSignature(file,className) {
  * @returns {string} - The skeleton of the method.
  */
 function createMethodSkeleton(file, method, className) {
-
   let methodSkeleton = "";
 
   // We remove all the spaces from all components of the method signature
   const returnType = method.returnType.replace(/\s/g, "");
   const methodName = method.methodName.replace(/\s/g, "");
-  const parameters = method.parameters.replace(/\s/g, ""); 
+  const parameters = method.parameters.replace(/\s/g, "");
 
   // The method signature without spaces (used to compare with the method implementation)
-  let methodSignature = `${returnType}${className}::${methodName}${parameters}`
-  if (method.isConstMethod) methodSignature += `const`; 
+  let methodSignature = `${returnType}${className}::${methodName}${parameters}`;
+  if (method.isConstMethod) methodSignature += `const`;
 
   const arrayMethodImplemented = browseFileToGetImplementation(
     file,
