@@ -44,7 +44,7 @@ L'extension SkeletonGen est maintenant installée et prête à être utilisée !
 ## Utilisation
 Une fois l'extension installée, suivez ces étapes pour générer le squelette d'un fichier .cpp à partir d'un fichier .h :
 
-Ouvrez le fichier .h pour lequel vous souhaitez générer le squelette du fichier .cpp dans Visual Studio Code.
+Ouvrez le fichier .h pour lequel vous souhaitez générer le squelette du fichier .cpp dans Visual Studio Code (un exemple est fourni dans le répertoire test pour que vous puissez tester avec).
 
 Utilisez la commande de votre choix pour lancer SkeletonGen. Vous pouvez le faire via le menu contextuel, le raccourci clavier associé ou en utilisant la palette de commandes de Visual Studio Code.
 
