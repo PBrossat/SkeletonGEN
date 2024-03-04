@@ -55,5 +55,7 @@ Vous pouvez maintenant ouvrir le fichier .cpp nouvellement généré et commence
 
 ## Limitations
 
-Veuillez noter que la fonction permettant de générer les surcharges d'opérateurs n'est pas encore pleinement fonctionnelle. En attendant, nous vous remercions de votre patience et vous encourageons à utiliser les autres fonctionnalités de l'extension qui marchent bel et bien.
+Veuillez noter que la fonction permettant de générer les surcharges d'opérateurs n'est pas encore pleinement fonctionnelle.
+Aussi, le logo de l'extension ne s'affiche pas comme je le souhaite dans la barre d'outil de vscode.
+En attendant, nous vous remercions de votre patience et vous encourageons à utiliser les autres fonctionnalités de l'extension qui marchent bel et bien.
 
