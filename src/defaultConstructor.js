@@ -1,4 +1,3 @@
-
 // eslint-disable-next-line no-unused-vars
 const vscode = require("vscode");
 const {
@@ -10,7 +9,6 @@ const {
   containsClassNameFollowedByParenthesis,
 } = require("./utils/constructorUtil");
 const { browseFileToGetImplementation } = require("./utils/browserFile");
-
 
 /**
  * Check if the default constructor exist in the file .h
@@ -60,11 +58,14 @@ function haveDefaultConstructor(file, className) {
  * @param {string} className - The name of the main class.
  * @returns {string} The generated constructor.
  */
-function createDefaultConstructorSkeleton(fileHeader, fileDefinition, className) {
+function createDefaultConstructorSkeleton(
+  fileHeader,
+  fileDefinition,
+  className
+) {
   let defaultConstructorSkeleton = "";
 
   const defaultConstructor = `${className}::${className}()`;
-
 
   const haveDefaultConstructorInHeader = haveDefaultConstructor(
     fileHeader,
@@ -77,14 +78,18 @@ function createDefaultConstructorSkeleton(fileHeader, fileDefinition, className)
     defaultConstructor
   );
 
-  const isDefaultConstructorImplemented = arrayOfDefaultConstructor.length !== 0;
+  const isDefaultConstructorImplemented =
+    arrayOfDefaultConstructor.length !== 0;
 
   if (haveDefaultConstructorInHeader && isDefaultConstructorImplemented) {
     for (let i = 0; i < arrayOfDefaultConstructor.length; i++) {
       defaultConstructorSkeleton += `${arrayOfDefaultConstructor[i]}\n`;
     }
     defaultConstructorSkeleton += `\n`;
-  } else if (haveDefaultConstructorInHeader && !isDefaultConstructorImplemented) {
+  } else if (
+    haveDefaultConstructorInHeader &&
+    !isDefaultConstructorImplemented
+  ) {
     defaultConstructorSkeleton += `${className}::${className}()\n`;
     defaultConstructorSkeleton += `{\n\t// TODO : implement the default constructor\n}\n\n`;
   }
